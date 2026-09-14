@@ -67,7 +67,7 @@ async function startLogging() {
     const fileName = getFileNameFromTimestamp(timestamp);
     const fullPath = path.join(logDir, fileName);
 
-    await appendFile(fullPath, `${message} | ${timestamp}\n`);
+    await appendFile(fullPath, `${timestamp} | ${message} \n`);
     console.log(`✓ Saved to: ${fullPath}`);
   }
 }
