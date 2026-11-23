@@ -1,0 +1,60 @@
+from datetime import datetime
+from pathlib import Path
+import re
+import sys
+
+# also this is the format that is supposed to be used by user
+MONTH_NAMES = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
+
+def get_formatted_timestamp(now:datetime | None=None) -> str:
+    current = now or datetime.now()
+    month_abbr = MONTH_NAMES[current.month - 1]
+    return f"{current:%H:%M} - {current:%d} {month_abbr} {current:%Y}"
+
+
+def get_file_name_from_timestamp(timestamp: str) -> str:
+    # Extract DD, MMM, and YYYY (e.g., matches "12 Sep 2026")
+    match = re.search(r"(\d{2})\s+([a-zA-Z]{3})\s+(\d{4})", timestamp)
+
+    if match:
+        day, month, year = match.groups()
+        return f"{day}{month.lower()}{year}.txt"
+
+    # Fallback to current date if custom input lacks proper date format
+    now = datetime.now()
+    month_abbr = MONTH_NAMES[now.month - 1].lower()
+    return f"{now:%d}{month_abbr}{now:%Y}.txt"
+
+
+def start_logging() -> None:
+    log_dir = Path.home() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        while True:
+            message = input("\n> Enter log message: ")
+            use_current = input("> Use current time? (Y/n): ")
+
+            if use_current.strip().lower() == "n":
+                # Must include "DD MMM YYYY" for dynamic file routing to work
+                timestamp = input("> Enter custom time (e.g., 08:00 - 10 Sep 2026): ")
+            else:
+                timestamp = get_formatted_timestamp()
+
+            file_name = get_file_name_from_timestamp(timestamp)
+            full_path = log_dir / file_name
+
+            with full_path.open("a", encoding="utf-8") as f:
+                f.write(f"{timestamp} | {message} \n")
+
+            print(f"✓ Saved to: {full_path}")
+    except (KeyboardInterrupt, EOFError):
+        print("\nExiting logger.")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    start_logging()
